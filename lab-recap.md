@@ -7,10 +7,23 @@
     - [Setup Requirements](XXXXX)
     - [VM Network Settings](XXXX)
     - [Local Environment Network Schema](XXXX)
-- [Lab Setup](XXX)
+- [Virtual Machine Setup](XXX)
+    - [Oracle VirtualBox](XXX)
     - [ParrotOS (Attacker)](XXX)
+        - [Install and Network Configuration](XXX)
+        - [Updates and Prep](XXX)
+        - [IP Address](XXX)
     - [Windows 11 (Target Victim)](XXX)
+        - [Install and Network Configuration](XXX)
+        - [Windows Defender Settings](XXXX)
+        - [Installing Elastic Agents](XXX)
+        - [Installing and Configuring Sysmon](XXX)
+        - [Increasing Visability on PowerShell Script Execution](XXX)
+        - [IP Address](XXX)
     - [Ubuntu (Zeek/Network Traffic Analyzer)](XXX)
+        - [Install and Network Configuration](XXX)
+        - [Updates and Prep](XXX)
+        - [IP Address](XXX)
 - [SIEM Setup](XXXX)
     - [Elastic Cloud Overview](XXXX)
     - [Elastic Agent Installation](XXX)
@@ -57,20 +70,90 @@ Please see the respective host setup under Lab Setup for additional clarity and 
 
 
 
-## Lab Setup
+## Virtual Machine Setup
 
 ### Oracle VirtualBox
 
 
 ### ParrotOS (Attacker)
+
+#### Install and Network Configuration
+
 The Security Edition of ParrotOS can be downloaded at https://parrotsec.org/download/. See Download button and select the virtualbox (amd64) option. After the .ova file is finished downloading, you can open the file directly to open it in VirtualBox and complete the VM installation.
 
-Once ParrotOS is fully installed as a VM inside of VirtualBox, change to network settings to enable Adapter 2 attached to "Host-only Adapter" to "Virtual Box Host-Only Ethernet Adapter". This will allow ParrotOS to communicate and interact with other VMs with the same network configurations in a safe and contained local network environment.
+Once ParrotOS is fully imported as a VM inside of VirtualBox, change to network settings to enable Adapter 2 attached to "Host-only Adapter" to "Virtual Box Host-Only Ethernet Adapter". This will allow ParrotOS to communicate and interact with other VMs with the same network configurations in a safe and contained local network environment.
+
+![parrotnetwork](./images/parrotnetwork.png)
 
 
+
+#### Updates and Prep
+
+Ensure that your OS is fully updated and has the tools needed by running the below commands. Sudo password should be `parrot`.
+
+```
+sudo apt-get update
+sudo apt-get upgrade
+```
+
+```
+sudo apt install vsftpd
+```
+
+```
+sudo apt install ftpd
+```
+
+
+
+#### IP Address
+
+We'll need to know what the IP address is for our ParrotOS host. To find it, open a terminal and run the `ip addr` command. The IP address for the ParrotOS host can be found next to "inet" under "3: enp0s8". For my particular VM, it is `192.168.56.104`.
+
+![parrot_ipaddr](./images/parrot_ipaddr.png)
 
 
 ### Windows 11 (Victim)
+
+#### Install and Network Configuration
+
+The file for Windows 11 VM install can be found at https://developer.microsoft.com/en-us/windows/downloads/virtual-machines/. 
+
+Navigate to the above link and select the VirtualBox option to download a .zip file. Extract the .ova file within and open it (it should open directly in VirtualBox) to begin the VM installation.
+
+Once Windows 11 is fully imported as a VM inside of VirtualBox, change to network settings to enable Adapter 2 attached to "Host-only Adapter" to "Virtual Box Host-Only Ethernet Adapter". This will allow ParrotOS to communicate and interact with other VMs with the same network configurations in a safe and contained local network environment.
+
+
+![windows11network](./images/windows11network.png)
+
+
+#### Windows Defender Settings
+
+
+
+
+#### Installing Elastic Agent
+
+
+
+
+#### Installing and Configuring Sysmon
+
+
+
+
+#### Increasing Visability on PowerShell Script Execution
+
+
+
+
+
+#### IP Address
+
+
+
+
+
 
 
 
