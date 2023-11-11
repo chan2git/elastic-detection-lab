@@ -1,1 +1,0 @@
-# elastic-detection-lab
