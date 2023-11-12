@@ -2,7 +2,7 @@
 
 
 ## Table of Contents
-- [Project Introduction and Overview](XXXXX)
+- [Project and Repo Overview](XXXXX)
 - [Getting Started](XXXXX)
     - [Setup Requirements](XXXXX)
     - [VM Network Settings](XXXX)
@@ -13,7 +13,7 @@
         - [Install and Network Configuration](XXX)
         - [Updates and Prep](XXX)
         - [IP Address](XXX)
-    - [Windows 11 (Target Victim)](XXX)
+    - [Windows 11 (Victim)](XXX)
         - [Install and Network Configuration](XXX)
         - [Windows Defender Settings](XXXX)
         - [Installing and Configuring Sysmon](XXX)
@@ -21,16 +21,38 @@
         - [IP Address](XXX)
     - [Ubuntu (Zeek/Network Traffic Analyzer)](XXX)
         - [Install and Network Configuration](XXX)
-        - [Updates and Prep](XXX)
+        - [Zeek Install and Configuration](XXX)
         - [IP Address](XXX)
-    - [Testing Local Network Connectivity](XXX)
 - [SIEM Setup](XXXX)
     - [Elastic Cloud Overview](XXXX)
-    - [Elastic Agent Installation](XXX)
-    - [Windows Sysmon Install and Configuration](XXX)
-- [Alert Scenario 1](XXXX)
+    - [Elastic Defend Integration](XXX)
+    - [Disabling Elastic Defend Response](XXXX)
+    - [Zeek Integration](XXX)
+    - [Windows Sysmon Integration](XXX)
+- [Alert Scenario 1: Unusual Web Scanning](XXXX)
+    - [Overview](XXX)
+    - [Conducting the Attack](XXX)
+    - [Alert Context](XXXX)
+    - [Query-Based Detection](XXXXX)
+    - [Threshold-Based Detection](XXXXX)
+    - [Alert Confirmation](XXXXX)
 - [Alert Scenario 2](XXXX)
+    - [Overview](XXX)
+    - [Conducting the Attack](XXX)
+    - [Alert Context](XXXX)
+    - [Query-Based Detection](XXXXX)
+    - [Threshold-Based Detection](XXXXX)
+    - [Alert Confirmation](XXXXX)
 - [Alert Scenario 3](XXXX)
+    - [Overview](XXX)
+    - [Conducting the Attack](XXX)
+    - [Alert Context](XXXX)
+    - [Query-Based Detection](XXXXX)
+    - [Threshold-Based Detection](XXXXX)
+    - [Alert Confirmation](XXXXX)
+
+
+
 
 # Project and Repo Overview
 
@@ -460,5 +482,65 @@ After repeating our attack, we can see that alerts have been triggered within ou
 # Alert Scenario 2
 
 
+## Overview
+
+
+
+
+## Conducting the Attack
+
+
+
+
+## Alert Context
+
+
+
+
+
+## Query-Based Detection
+
+
+
+
+## Threshold-Based Detection
+
+
+
+
+## Alert Confirmation
+
+
+
+
+
+
+
 
 # Alert Scenario 3
+
+
+
+## Overview
+
+
+
+## Conducting the Attack
+
+
+
+
+## Alert Context
+
+
+
+
+## Query-Based Detection
+
+
+
+
+## Threshold-Based Detection
+
+
+## Alert Confirmation
