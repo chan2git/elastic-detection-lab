@@ -425,7 +425,7 @@ To build a query-based detection alert, navigate to Security > Rules > Detection
 Define Rule
 - Custom Query: `event.dataset : zeek.http and user_agent.original: *Nikto* or user_agent.original: *Nmap*`
 - Suppress alerts by: `destination.ip`
-- Per time period: 5 Minutes
+- Suppress per time period: 5 Minutes
 
 
 
@@ -624,18 +624,61 @@ Instead of taking a specific and explicit approach, we could try a more generali
 >[!NOTE]  
 > Detection Engineers need a thorough understanding of their internal enterprise environment. Employing a broad detection strategy to alert on PowerShell scripts initiated by batch files may result in numerous false positives, particularly since IT staff may commonly utilize batch files. While this project/course will accept a generalized approach for Alert Scenario 2, it is essential to carefully consider the potential impact of this strategy within a fully operational enterprise environment.
 
-
-
-
+Additionally, we can also craft a third detection focusing on key strings found in the malicious payload script that executes the reverse shell. While there are arbitrary information within the script, such as the listening IP address/port, we can craft the detection using non-arbitary strings such as `$c=New-Object system.net.sockets.tcpclient`.
 
 
 ## Query-Based Detection #1
+Using the context of batch files being transmitted through unusual ports (e.g. not port 80), we can build a detection that hones in on this with the below query.
+
+```
+event.dataset: "zeek.http" and url.extension: bat and not destination.port: 80
+```
+
+To build a query-based detection alert, navigate to Security > Rules > Detection Rules > Create new rule > Custom query and paste in the query we created above into the Custom query field. The following details and settings below can be applied to the rule.
+
+Define Rule
+
+- Custom Query: event.dataset : event.dataset: "zeek.http" and url.extension: bat and not destination.port: 80
+
+- Suppress alerts by: source.ip
+
+- Suppress per time period: 5 Minutes
+
+>[!NOTE]  
+> The reason why alert suppression is needed is to avoid creating multiple alerts for essntially one general event within a specific time frame. By suppressing alerts by `source.ip` within 5 minutes, we can get alerted without receiving multiple alerts. If a different source IP address is involved, then a separate alert will be triggered.
+
+
+
+
+About Rule
+- Name: Batch Files Observed in HTTP Traffic on Unusual Port
+
+- Description: Zeek HTTP data identifying .bat file extensions on unexpected destination port (NOT Port 80)
+
+- Severity: High
+
+- Risk Score: 75
+
+- Advanced Settings
+    - MITRE ATT&CK Threats
+        - Tactic: Execution (TA0002)
+        - Technique: Command and Scripting interpreter (T1059)
+        - Subtechnique: Windows Command Shell (T1059.003)
+
+Schedule Rule
+
+- Runs every: 5 Minutes
+
+- Additional look-back time: 5 Minutes
+
+
+
+## Query-Based Detection #2
 
 
 
 
 
-## Alert Confirmation
 
 
 
@@ -644,30 +687,9 @@ Instead of taking a specific and explicit approach, we could try a more generali
 
 
 
-# Alert Scenario 3
 
 
 
-## Overview
-
-
-
-## Conducting the Attack
-
-
-
-
-## Alert Context
-
-
-
-
-## Query-Based Detection
-
-
-
-
-## Threshold-Based Detection
 
 
 ## Alert Confirmation
