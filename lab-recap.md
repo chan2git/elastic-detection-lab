@@ -16,7 +16,6 @@
     - [Windows 11 (Target Victim)](XXX)
         - [Install and Network Configuration](XXX)
         - [Windows Defender Settings](XXXX)
-        - [Installing Elastic Agents](XXX)
         - [Installing and Configuring Sysmon](XXX)
         - [Increasing Visability on PowerShell Script Execution](XXX)
         - [IP Address](XXX)
@@ -29,24 +28,25 @@
     - [Elastic Cloud Overview](XXXX)
     - [Elastic Agent Installation](XXX)
     - [Windows Sysmon Install and Configuration](XXX)
-    - [PowerShell Visibility](XXXX)
 - [Alert Scenario 1](XXXX)
 - [Alert Scenario 2](XXXX)
 - [Alert Scenario 3](XXXX)
 
-## Project and Repo Overview
+# Project and Repo Overview
 
 This repo is my personal recap and walkthrough of a introductory hands-on course by TCM Security on Detection Engineering. The course and project focuses on staging a local network environment consisting of three virtual machines (VM) which play the role of Attacker, Target Victim, and Zeek/Network Traffic Analyzer, and the implementation of Elastic Cloud (trial version) as the SIEM of choice, which will be utilized to create and test detection alerts for various scenarios.
 
 The current version of this repo highlights the local environment/VM/SIEM setup, installing agents to collect logs, and testing Elastic queries and alerts. A future pending update will cover TOML, uploading detections to Github, and programtically pushing alerts to Elastic Cloud. 
 
-While this recap/walkthrough will briefly touch upon setting up the lab environment and settings, the primary focus is on using Elastic Cloud as a SIEM and creating alert detection. This recap/walkthrough aims to showcase a hands-on demonstration of successfully completing the course while highlighting a comprehensive understanding of its contents and the essential/fundamental principles of detection engineering.
+While this recap/walkthrough will briefly touch upon setting up the lab environment and settings, the primary focus is on using Elastic Cloud as a SIEM and creating detection alerts. This repo aims to showcase a hands-on demonstration of successfully completing the course while highlighting a comprehensive understanding of its contents and the essential/fundamental principles of detection engineering.
+
+For additional and expanded guidance/support, please refer to each component's documentation.
 
 
-## Getting Started
+# Getting Started
 
 
-### Setup Requirements
+## Setup Requirements
 The project requires the use of a hypervisor to house three VMs (Ubuntu, ParrotOS, Windows 11). While any hypervisor can work, the hypervisor of choice within this project will be Oracle VM VirtualBox.
 
 A SIEM will also need to be implemented which will collect logs from the Ubuntu and Windows 11 hosts. There are several SIEMs to choose from and could be incorporated. However for the scope of this project, the SIEM of choice will be Elastic Cloud (trial version).
@@ -61,24 +61,24 @@ The Target Victim VM is needed to be on the receiving end of the Attacker VM's a
 
 
 
-### VM Network Settings
+## VM Network Settings
 For the VMs to be able to communicate to each other within a safe and contained local network environment, an additional network adapter needs to be added in VirtualBox's network settings. ParrotOS and Windows 11 will need to have Adapter 2 attached to "Host-only Adapter" to "VirtualBox Host-Only Ethernet Adapter", while Zeek will need to have Adapter 2 
 
 Please see the respective host setup under Lab Setup for additional clarity and instructions.
 
 
-### Local Environment Network Schema
+## Local Environment Network Schema
 
 
 
-## Virtual Machine Setup
+# Virtual Machine Setup
 
-### Oracle VirtualBox
+## Oracle VirtualBox
 
 
-### ParrotOS (Attacker)
+## ParrotOS (Attacker)
 
-#### Install and Network Configuration
+### Install and Network Configuration
 
 The Security Edition of ParrotOS can be downloaded at https://parrotsec.org/download/. See Download button and select the virtualbox (amd64) option. After the .ova file is finished downloading, you can open the file directly to open it in VirtualBox and complete the VM installation.
 
@@ -88,7 +88,7 @@ Once ParrotOS is fully imported as a VM inside of VirtualBox, change to network 
 
 
 
-#### Updates and Prep
+### Updates and Prep
 
 Ensure that your OS is fully updated and has the tools needed by running the below commands. Sudo password should be `parrot`.
 
@@ -107,16 +107,16 @@ sudo apt install ftpd
 
 
 
-#### IP Address
+### IP Address
 
 We'll need to know what the IP address is for our ParrotOS host. To find it, open a terminal and run the `ip addr` command. The IP address for the ParrotOS host can be found next to "inet" under "3: enp0s8". For my particular VM, it is `192.168.56.104`.
 
 ![parrot_ipaddr](./images/parrot_ipaddr.png)
 
 
-### Windows 11 (Victim)
+## Windows 11 (Victim)
 
-#### Install and Network Configuration
+### Install and Network Configuration
 
 The file for Windows 11 VM install can be found at https://developer.microsoft.com/en-us/windows/downloads/virtual-machines/. 
 
@@ -128,7 +128,7 @@ Once Windows 11 is fully imported as a VM inside of VirtualBox, change to networ
 ![windows11network](./images/windows11network.png)
 
 
-#### Windows Defender Settings
+### Windows Defender Settings
 
 To ensure that we're able to fully test malicious activity against our Windows 11 host, we'll need to configure (or 'misconfigure') some settings. The below will need to be completed in order to allow the full execution of testing activities and subsuqent triggering of alerts.
 
@@ -145,24 +145,40 @@ Local Group Policy Editor > Computer Configuration > Administrative Templates > 
 
 
 
+### Installing and Configuring Sysmon
 
-#### Installing Elastic Agent
+While the Elastic and Zeek agents will cover a lot of the log data generated from the host VMs, there will be instances where some crucial information isn't captured or details may be lacking. For our Windows 11 VM, we can install Sysmon which will act as an additional data log source capturing details on process creations, network connections, and PowerShell commands.
 
+You can download Sysmon from https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon.
 
-
-
-#### Installing and Configuring Sysmon
-
-
-
-
-#### Increasing Visability on PowerShell Script Execution
+Additionally, Sysmon will require a configuration file to work. A premade configuration file can be downloaded from https://github.com/SwiftOnSecurity/sysmon-config. Please refer to this repo for additional details and guidance on setting up and configuring Sysmon on the Windows 11 VM.
 
 
 
 
+### Increasing Visability on PowerShell Script Execution
+We can enable additional visability on details for PowerShell scripts by configuring a few settings. If we navigate to Local Group Policy Editor > Administrative Template > Windows Components > Windows PowerShell and complete the following changes:
 
-#### IP Address
+Turn on Module Logging: 
+- Enabled
+- Module Names Value: *
+
+Turn on PowerShell Script Block Logging: 
+- Enabled
+
+Turn on Script Execution: 
+- Enabled
+- Execution Policy: Allow all scripts
+
+Turn on PowerShell Transcription: Enabled
+
+
+### Installing Python
+At some point, we'll be spinning up a simple Python web server on our Windows 11 VM, which will require Python to be installed. Open a terminal and enter `python` and follow the installation prompt from the Windows store.
+
+
+
+### IP Address
 
 We'll need to know what the IP address is for our Windows 11 host. To find it, open a terminal and run the `ipconfig /all` command. The IP address for the Windows 11 host can be found next to "IPv4 Address". For my particular VM, it is `192.168.56.105`.
 
@@ -173,9 +189,9 @@ We'll need to know what the IP address is for our Windows 11 host. To find it, o
 
 
 
-### Ubuntu (Zeek/Network Traffic Analyzer)
+## Ubuntu (Zeek/Network Traffic Analyzer)
 
-#### Install and Network Configuration
+### Install and Network Configuration
 
 The installation of Ubuntu VM is different from the others in that we are not importing a .ova file. Instead we'll need to download a Ubuntu .iso file and manually set it up within VirtualBox. The .iso file can be downloaded at https://ubuntu.com/download/desktop.
 
@@ -185,16 +201,20 @@ Within the VirtualBox network settings for the Ubuntu VM, enable Adapter 2 and a
 
 ![zeek_network](./images/zeek_network.png)
 
-#### Zeek Install and Configuration
+### Zeek Install and Configuration
 
 Documentation for installing and configuring Zeek can be found at https://docs.zeek.org/en/master/install.html.
 
-Ensure that you install `curl` by running the command `sudo apt-install curl` before running any install commands from the Zeek documentation.
+Ensure that you install `curl` on your Ubuntu VM by running the command `sudo apt-install curl` before running any install commands from the Zeek documentation or you may encounter an install error.
 
-While Zeek is a critical component of the overall project, the specific details on configuration is outside the scope of this repo which is primarily focused on the generally setting up the local network environment, Elastic Cloud, and detection engineering. Please refer to Zeek documentation on how to fully setup and configure Zeek.
+While Zeek is a critical component of the overall project, the specific details on configuration is outside the scope of this repo which is to highlight the general setup of the local network environment and lab, while primarily focusing more on Elastic Cloud and detection engineering. 
+
+Once Zeek has been fully setup and configured, it will need to be deployed in order to actively listen and collect traffic data.
+
+Please refer to Zeek documentation on how to fully setup, configure, and deploy Zeek.
 
 
-#### IP Address
+### IP Address
 
 We'll need to know what the IP address is for our Ubuntu/Zeek host. To find it, open a terminal and run the `ip addr` command. The IP address for the Ubuntu/Zeek host can be found next to "inet" under "3: enp0s8". For my particular VM, it is `192.168.56.103`.
 
@@ -210,17 +230,142 @@ We'll need to know what the IP address is for our Ubuntu/Zeek host. To find it, 
 
 
 
-## SIEM Setup
+# SIEM Setup
+
+## Elastic Cloud Overview
+
+Elastic Cloud is a tool stack that includes several components and functionality related to log consonlidation, security threat detection and response, and visualizing analytics. Most importantly, we will be utiizing Elastic Cloud as a SIEM to query through logs and create detection alerts.
+
+This project utilizes a free 14-day trial period that includes a one time 1 week extension if needed. Sign up at https://www.elastic.co/ and select "Start Free Trial". Follow the steps to sign up and name your first deployment (e.g. "elastic-detection-lab).
+
+![elastic_signup](./images/elastic_signup.png)
+
+
+
+## Elastic Defend Integration
+
+In order to collect logs from our Windows 11 VM, we'll need to set up Elastic Defend and install the appropriate agent. Visit the Integrations page and search for Elastic Defend. Select Elastic Defend and click on "Add Elastic Defend" followed by "Install Elastic Agent on your host"
+
+![elastic_defend1](./images/elastic_defend1.png)
+
+
+![elastic_defend2](./images/elastic_defend2.png)
+
+
+![elastic_defend3](./images/elastic_defend3.png)
+
+
+On the next page, you'll be shown scripts for various OS to install Elastic Defend agent on a host machine. Copy and paste the script provided for Windows and execute in a admin PowerShell shell terminal. Once the script is ran, the agent should be installed and you'll advance to the next pages where it'll confirm the agent installed, integration added, and provide a preview of incoming data.
+
+
+![elastic_defend4](./images/elastic_defend4.png)
+
+![elastic_defend5](./images/elastic_defend5.png)
+
+![elastic_defend6](./images/elastic_defend6.png)
+
+
+
+##  Disabling Elastic Defend Response
+
+Similar with disabling Windows Defender Antivirus on our Windows 11 VM, we'll also disable Elastic Defend's threat response. Within Elastic Defend's Integration Policies, we can edit the integration to make the below changes:
+
+Type: Malware
+- Malware protections: Enabled
+- Protection level: Detect
+
+Type: Ransomware
+- Ransomware protections: Enabled
+- Protection level: Detect
+
+Type: Memory Threat
+- Memory threat protections: Enabled
+- Protection level: Detect
+
+Type: Malicious Behavior
+- Malicious behavior protections: Enabled
+- Protection level: Detect
+
+Save and deploy the changes.
+
+
+## Zeek Integration
+
+In order to centralize and forward Zeek logs from our Ubuntu to Elastic Cloud, we'll need to set up an Elastic agent to collect the Zeek logs. Visit the Integrations page and search for Zeek. Select Zeek. Complete the instructions regarding appending json-logs policy to your local.zeek file by adding in the line `@load policy/tuning/json-logs.zeek`
+
+
+![zeek_agent1](./images/zeek_agent1.png)
+
+
+![zeek_agent2](./images/zeek_agent2.png)
+
+
+Then click on "Add Zeek". On the next page, provide a name to the "New agent policy name" field (e.g. zeek policy) and click on "Save and continue", followed by "Add Elastic Agent to your hosts"
+
+
+![zeek_agent3](./images/zeek_agent3.png)
+
+
+On the next page, you'll be shown scripts for various OS to install an Elastic agent for Zeek on a host machine. Copy and paste the script provided for Linux and execute in a terminal. Once the script is ran, the agent should be installed and youll advance to the next pages where it'll confir
+
+![zeek_agent4](./images/zeek_agent4.png)
+
+On the next page, you'll be shown scripts for various OS to install Elastic Defend agent on a host machine. Copy and paste the script provided for Linux and execute in a admin PowerShell shell terminal. Once the script is ran, the agent should be installed and you'll see  a confirmation of agent enrollment and incocoming data.
+
+![zeek_agent5](./images/zeek_agent5.png)
+
+
+## Windows Sysmon Integration
+
+Similar to the Elastic Defend/Zeek integrations, we'll search for and add the Windows integration. Leave the settings as is and add the integration to an existing host and select the initial Elastic Agent policy (e.g. "My first agent policy"). Save and continue and confirm the deployment.
+
+
+
+![sysmon_agent](./images/sysmon_agent.png)
+
+
+# Alert Scenario 1: Unusual Web Scanning
+## Overview
+ParrotOS will conduct web scanning (Nmap, Nikto, ZAP) against a web server hosted on the Windows 11 VM. Zeek will capture the activity and forward the log data to Elastic Cloud.
+
+An alert for detection will be created based on query and threshold.
+
+
+## Query-Based Detection
+
+## Threshold-Based Detection
+
+## Conducting the Attack
+
+The Windows 11 VM will need to spin up a web server. From a PowerShell terminal enter the command `python -m http.server`. We'll see that the Windows 11 VM is hosting a simple HTTP server on 192.168.56.105:8000.
+
+![alert1_pythonweb](./images/alert1_pythonweb.png)
+
+
+From the ParrotOS VM, we'll begin our web scanning with the first tool, Nmap. Within a terminal, run the command `sudo nmap -sV -p 8000 192.168.56.139`.
+
+![alert1_nmapscan](./images/alert1_nmapscan.png)
+
+After the nmap scan is completed, we'll start another scan with the second tool, Nikto. From a terminal, run the command `sudo nikto -h 192.168.56.105:8000`.
+
+![alert1_niktoscan](./images/alert1_niktoscan.png)
+
+Finally, we'll conduct web scanning from our third tool, OWASP ZAP. Run ZAP from Applications > Pentesting > Most Used > OWASP ZAP. Enter `192.168.56.105:8000` in the "URL to attack" field and click Attack. Once you generate a little over 1000 requests, you click Stop as that should be sufficent.
+
+![alert1_zapscan](./images/alert1_zapscan.png)
+
+![alert1_zapscan2](./images/alert1_zapscan2.png)
 
 
 
 
-## Alert Scenario 1
+
+## Alert Confirmation
 
 
 
-## Alert Scenario 2
+# Alert Scenario 2
 
 
 
-## Alert Scenario 3
+# Alert Scenario 3
