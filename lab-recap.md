@@ -331,10 +331,6 @@ ParrotOS will conduct web scanning (Nmap, Nikto, ZAP) against a web server hoste
 An alert for detection will be created based on query and threshold.
 
 
-## Query-Based Detection
-
-## Threshold-Based Detection
-
 ## Conducting the Attack
 
 The Windows 11 VM will need to spin up a web server. From a PowerShell terminal enter the command `python -m http.server`. We'll see that the Windows 11 VM is hosting a simple HTTP server on 192.168.56.105:8000.
@@ -355,6 +351,58 @@ Finally, we'll conduct web scanning from our third tool, OWASP ZAP. Run ZAP from
 ![alert1_zapscan](./images/alert1_zapscan.png)
 
 ![alert1_zapscan2](./images/alert1_zapscan2.png)
+
+## Alert Context
+We know that web scanning activity will be captured by Zeek (`zeek:http`), so we can run a general query below and see what returns. Additionally, we would want to toggle fields with values that may be interesting to us and can provide the relevant context of web scanning. Some questions that come to mind are
+- Where is the web scanning coming from?
+- Who is being targeted by the web scanning activity?
+- What is the HTTP method being used?
+- What is the path the web scanner is crawling through?
+- Can we see if the web scanner is advertising itself?
+
+
+The fields `source.ip`, `source.port`, `destination.ip`, `destination.port`, `event.action`, `url.path`, and `user_agent.original` can be toggled to help answer these questions and provide context.
+
+```
+event.dataset : zeek.http
+```
+
+![alert1_elastic](./images/alert1_elastic.png)
+
+A crucial piece of information that can help us craft a detection is knowing if the web scanner is advertising itself in the `user_agent.original` field. We can view Field Statistics and see what the current top values are. Currently, we can see Firefox and Nikto.
+
+
+![alert1_elastic2](./images/alert1_elastic2.png)
+
+But what about "Other"? Let's modify our query to the one below to exclude Nikto and see if anything interesting comes back
+
+```
+event.dataset : zeek.http and NOT user_agent.original: *Nikto*
+```
+
+![alert1_elastic3](./images/alert1_elastic3.png)
+
+
+With these two queries and observing the field statistics on interesting fields, we now know that Nmap and Nikto advertise themselves in the `user_agent.original` field, which can be crucial information to craft a query-based detection.
+
+
+
+
+
+## Query-Based Detection
+Based on the alert context we were able to figure out, we know that Nmap and Nikto advertise themselves in the `user_agent.original` field. We can build a query that hones in on this information to build a query-based detection alert. The below query can be used to specifically hone in on Nmap and Nikto web scanning activity.
+
+```
+event.dataset : zeek.http and user_agent.original: *Nikto* or user_agent.original: *Nmap*
+```
+
+To build a query-based detection alert, navigate to Security > Rules > Detection Rules > Create new rule > Custom query and paste in the query we created above into the Custom query field.
+
+
+
+## Threshold-Based Detection
+We know that there was a third web scanner used that currently isn't being accounted for. The value for the `user_agent.original` references Gecko/Mozilla, which seems to be Mozilla Firefox and may cause a lot of false positives if we detected on that. Instead, we can create a generic web scanning alert that detects on the excessive HTTP traffic behavior of a web scanner.
+
 
 
 
