@@ -53,7 +53,7 @@
     - [Alert Context and Query-Based Detection #2](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#alert-context-and-query-based-detection-2)
     - [Alert Context and Query-Based Detection #3](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#alert-context-and-query-based-detection-3)
     - [Alert Context and Query-Based Detection #4](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#alert-context-and-query-based-detection-4)
-    - [Alert Confirmation](XXXXX)
+    - [Alert Confirmation](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#alert-confirmation-2)
 
 
 
