@@ -411,7 +411,7 @@ With these two queries and observing the field statistics on interesting fields,
 
 
 
-## Query-Based Detection
+## Query-Based Detection #1
 Based on the alert context we were able to figure out, we know that Nmap and Nikto advertise themselves in the `user_agent.original` field. We can build a query that hones in on this information to build a query-based detection alert. The below query can be used to specifically hone in on Nmap and Nikto web scanning activity.
 
 ```
@@ -451,7 +451,7 @@ Schedule Rule
 
 
 
-## Threshold-Based Detection
+## Threshold-Based Detection #1
 We know that there was a third web scanner used that currently isn't being accounted for. The value for the `user_agent.original` references Gecko/Mozilla, which seems to be Mozilla Firefox and may cause a lot of false positives if we detected on that. Instead, we can create a generic web scanning alert that detects on the excessive HTTP traffic behavior of a web scanner.
 
 
@@ -723,7 +723,7 @@ Schedule Rule
 
 ## Query-Based Detection #3
 
-Using the context batch files being downloaded by a `Invoke-WebRequest` command in PowerShell, we can build a detection that hones in on this event with the query below.
+Using the context of batch files being downloaded by a `Invoke-WebRequest` command in PowerShell, we can build a detection that hones in on this event with the query below.
 
 ```
 event.dataset: "windows.sysmon_operational" and process.parent.name: powershell.exe and process.parent.command_line: *Invoke-WebRequest* and process.command_line: *bat*
@@ -821,13 +821,121 @@ Schedule Rule
 
 
 
-
-
-
-
-
-
-
-
-
 ## Alert Confirmation
+
+After repeating our attack, we can see that all four alerts have been triggered within our Security Alerts Dashboard.
+
+![alert2_confirm](./images/alert%202_confirm.png)
+
+
+
+A cool feature of Elastic Cloud is being able to visually analyze alerts and the timeline of events. Here, we're expanding our Potential Metasploit PowerShell Payload Observed alert and can click on each node to view more details and visually observe the general flow of events.
+
+![alert2_analyze](./images/alert2_analyze.png)
+
+
+
+
+
+
+# Alert Scenario 3
+
+## Overview
+A dropper file located on the Windows 11 VM will contain a script to determine if Microsoft Defender is enabled or disabled. If Microsoft Defender is disabled, then the dropper file will then execute a script to create a directory at path `C:\Windows\Temp\exfil` in addition to downloading 2 malicious PowerShell scripts from the ParrotOS VM - One titled "Keylogger.ps1" and another titled "Exfil.ps1". The script then adds to the Windows Registry commands to execute the two malicious PowerShell scripts at the time of bootup.
+
+The Keylogger.ps1 script captures user keystrokes and stores it in a text file called keylogger.txt in `C:\Windows\Temp\exfil`.
+
+The Exfil.ps1 script runs the `systeminfo` command and stores the contents in a file called sysinfo.txt in a desiginated file directory. The script then crawls to the file directory containing the user's Internet Edge browsing history and copies/zips it to `C:\Windows\Temp\exfil`. The script then connects to a FTP server hosted on the ParrotOS VM where exfil.zip is then transmitted over.
+
+
+
+1. when ps1 files get added to registry
+2. System info and browser info manipulated
+3. When data is zipped
+4. FTP and exfil activity
+
+## Conducting the Attack
+Documentation to be updated.
+
+
+
+## Alert Context
+We know that logs regarding registry changes and edits can be captured with Sysmon (`windows.sysmon_operational`) and we are concern that there are PowerShell commands within the registry path that runs everytime the VM is booted up. We can run the below query to hone in on this behavior.
+
+```
+event.dataset: "windows.sysmon_operational" and event.action: "RegistryEvent (Value Set)" and registry.path: *Microsoft\\\\Windows\\\\CurrentVersion\\\\Run* and registry.data.strings: *.ps1
+```
+
+
+Additionally, we would want to toggle fields with values that may be interesting to us and can provide the relevant context of registry edits and changes. Some questions that come to mind are
+
+- What is the executable process?
+- What is the unusual registry key?
+- What is the unusual registry path?
+- What is the strings found within the registry data?
+- Which host machine is affected?
+
+The fields `process.executable`, `registry.key`, `registry.path`, `registry.data.strings`, and `host.hostname` can be toggled on to answer these questions and provide context.
+
+
+## Query-Based Detection
+
+Using the context of unusual registry keys being added with strings referencing PowerShell in a specific registry directory, we can build a detection that hones in on this event with the below query.
+
+```
+event.dataset: "windows.sysmon_operational" and event.action: "RegistryEvent (Value Set)" and registry.path: *Microsoft\\\\Windows\\\\CurrentVersion\\\\Run* and registry.data.strings: *.ps1
+```
+
+
+>[!NOTE]  
+> The field `message` is used instead as the `process.parent.command_line` field was marked as an Ignored Value (can't be searched or filtered for) due to being too long. The `message` field contains the string we're looking for and is searchable, thus makes a good alternative to include as part of the query.
+
+
+To build a query-based detection alert, navigate to Security > Rules > Detection Rules > Create new rule > Custom query and paste in the query we created above into the Custom query field. The following details and settings below can be applied to the rule.
+
+Define Rule
+
+- Custom Query: `event.dataset: "windows.sysmon_operational" and event.action: "RegistryEvent (Value Set)" and registry.path: *Microsoft\\\\Windows\\\\CurrentVersion\\\\Run* and registry.data.strings: *.ps1`
+
+- Suppress alerts by: `host.hostname`
+
+- Suppress per time period: 5 Minutes
+
+>[!NOTE]  
+> The reason why alert suppression is needed is to avoid creating multiple alerts for one particular event. We can suppress by individual host machines (`host.hostname`) to ensure we don't creating multiple alerts on one particular event on a specific host, but leave room to allow alerts to generate if another host machine is exhibiting unusual registry keys/changes that reference PowerShell.
+
+
+
+
+About Rule
+- Name: Suspicious PowerShell File Added to Registry
+
+- Description: Sysmon identifying .ps1 files added to autorun during bootup location in the Windows Registry.
+
+- Severity: Critical
+
+- Risk Score: 100
+
+- Advanced Settings
+    - MITRE ATT&CK Threats
+        - Tactic: Persistence (TA0003)
+        - Technique: Boot or Logon Autostart Exeuction (T1547)
+        - Subtechnique: Registry Run Keys / Startup Folder (T1547.001)
+
+Schedule Rule
+
+- Runs every: 5 Minutes
+
+- Additional look-back time: 5 Minutes
+
+
+
+
+
+
+
+
+
+
+
+## Threshold-Based Detection
