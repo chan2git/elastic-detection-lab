@@ -2,7 +2,7 @@
 
 
 ## Table of Contents
-- [What is Detection Engineering?](XXXXXX)
+- [What is Detection Engineering?](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#what-is-detection-engineering)
 - [Project and Repo Overview](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#project-and-repo-overview)
 - [Getting Started](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#getting-started)
     - [Setup Requirements](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#setup-requirements)
