@@ -100,7 +100,9 @@ Please see the respective host setup under Lab Setup for additional clarity and 
 # Virtual Machine Setup
 
 ## Oracle VirtualBox
+Oracle VirtualBox will be the hypervisor of choice. You can download Oracle VirtualBox at https://www.virtualbox.org/wiki/Downloads.
 
+Please see documentation if needed at https://www.virtualbox.org/wiki/Documentation
 
 ## ParrotOS (Attacker)
 
