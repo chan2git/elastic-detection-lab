@@ -2,6 +2,7 @@
 
 
 ## Table of Contents
+- [What is Detection Engineering?](XXXXXX)
 - [Project and Repo Overview](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#project-and-repo-overview)
 - [Getting Started](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#getting-started)
     - [Setup Requirements](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#setup-requirements)
@@ -55,7 +56,13 @@
     - [Alert Context and Query-Based Detection #4](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#alert-context-and-query-based-detection-4)
     - [Alert Confirmation](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#alert-confirmation-2)
 
+# What is Detection Engineering?
+Detection Engineering can be broadly described as the art of collecting, monitoring, and analyzing data to craft a 'detection' that will identify and alert on a specific scenario, such as:
+- Possible threats (malware, ransomware, unusual network activity, movement and persistence of a threat actor, etc.)
+- Anomalies in the environment (uncommon network traffic patterns, unexpected user activity, rogue daemons/processes)
+- Identifying the existence of specific Indicators of Compromise, or IOCs (unusual IP addresses, known malicious domains, suspicious user-agent strings, hash fingerprint of harmful files, etc.).
 
+Detection Engineering is a dynamic and multi-faceted niche that draws from various security disciplines, such as Threat Intelligence, Incident Response, Malware Analysis, Network Security, and beyond. As a consantly evolving practice, Detection Engineering aims to stay ahead of known and emerging threats by ensuring robust and comprehensive log collection, leveraging the latest and most relevant threat intelligence, and safeguarding the integrity of the enterprise envionrment.
 
 
 # Project and Repo Overview
@@ -1025,7 +1032,7 @@ Define Rule
 
 
 About Rule
-- Name: Data Archvie for Potential Exfil
+- Name: Data Archive for Potential Exfil
 
 - Description: Endpoint identifying .zip files created by PowerShell in the Windows/Temp directory.
 
