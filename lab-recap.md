@@ -37,7 +37,7 @@
     - [Query-Based Detection #1](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#query-based-detection-1)
     - [Threshold-Based Detection #1](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#threshold-based-detection-1)
     - [Alert Confirmation](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#alert-confirmation)
-- [Alert Scenario 2](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#alert-scenario-2)
+- [Alert Scenario 2: Batch Files and Malicious Payloads](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#alert-scenario-2)
     - [Overview](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#overview-1)
     - [Conducting the Attack](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#conducting-the-attack-1)
     - [Alert Context](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#alert-context-1)
@@ -46,7 +46,7 @@
     - [Query-Based Detection #3](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#query-based-detection-3)
     - [Query-Based Detection #4](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#query-based-detection-4)
     - [Alert Confirmation](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#alert-confirmation-1)
-- [Alert Scenario 3](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#alert-scenario-3)
+- [Alert Scenario 3: Registry Edits, Data Staging, and Exfiltration](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#alert-scenario-3)
     - [Overview](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#overview-2)
     - [Conducting the Attack](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#conducting-the-attack-2)
     - [Alert Context and Query-Based Detection #1](https://github.com/chan2git/elastic-detection-lab/blob/main/lab-recap.md#alert-context-and-query-based-detection-1)
@@ -505,7 +505,7 @@ A good afterthought is how would we want to alert on a potential DDoS attack, wh
 
 
 
-# Alert Scenario 2
+# Alert Scenario 2: Batch Files and Malicious Payloads
 
 ## Overview
 A dropper file located on the Windows 11 VM will contain a script to determine if Microsoft Defender is enabled or disabled. If Microsoft Defender is disabled, then the dropper file will then download a malicious script to execute a remote reverse shell to connect to the ParrotOS VM.
@@ -844,7 +844,7 @@ A cool feature of Elastic Cloud is being able to visually analyze alerts and the
 
 
 
-# Alert Scenario 3
+# Alert Scenario 3: Registry Edits, Data Staging, and Exfiltration
 
 ## Overview
 A dropper file located on the Windows 11 VM will contain a script to determine if Microsoft Defender is enabled or disabled. If Microsoft Defender is disabled, then the dropper file will then execute a script to create a directory at path `C:\Windows\Temp\exfil` in addition to downloading 2 malicious PowerShell scripts from the ParrotOS VM - One titled "Keylogger.ps1" and another titled "Exfil.ps1". The script then adds to the Windows Registry commands to execute the two malicious PowerShell scripts at the time of bootup.
