@@ -859,8 +859,8 @@ Documentation to be updated.
 
 
 
-## Alert Context
-We know that logs regarding registry changes and edits can be captured with Sysmon (`windows.sysmon_operational`) and we are concern that there are PowerShell commands within the registry path that runs everytime the VM is booted up. We can run the below query to hone in on this behavior.
+## Alert Context and Query-Based Detection #1
+We know that logs regarding registry changes and edits can be captured with Sysmon (`windows.sysmon_operational`) and we are concern that there are PowerShell commands within the registry path that runs everytime the VM is booted up. We can run the below query to hone in and build a detection on this behavior.
 
 ```
 event.dataset: "windows.sysmon_operational" and event.action: "RegistryEvent (Value Set)" and registry.path: *Microsoft\\\\Windows\\\\CurrentVersion\\\\Run* and registry.data.strings: *.ps1
@@ -878,17 +878,12 @@ Additionally, we would want to toggle fields with values that may be interesting
 The fields `process.executable`, `registry.key`, `registry.path`, `registry.data.strings`, and `host.hostname` can be toggled on to answer these questions and provide context.
 
 
-## Query-Based Detection
-
-Using the context of unusual registry keys being added with strings referencing PowerShell in a specific registry directory, we can build a detection that hones in on this event with the below query.
 
 ```
 event.dataset: "windows.sysmon_operational" and event.action: "RegistryEvent (Value Set)" and registry.path: *Microsoft\\\\Windows\\\\CurrentVersion\\\\Run* and registry.data.strings: *.ps1
 ```
 
-
->[!NOTE]  
-> The field `message` is used instead as the `process.parent.command_line` field was marked as an Ignored Value (can't be searched or filtered for) due to being too long. The `message` field contains the string we're looking for and is searchable, thus makes a good alternative to include as part of the query.
+![alert3_elastic1](./images/alert3_elastic1.png)
 
 
 To build a query-based detection alert, navigate to Security > Rules > Detection Rules > Create new rule > Custom query and paste in the query we created above into the Custom query field. The following details and settings below can be applied to the rule.
@@ -905,10 +900,8 @@ Define Rule
 > The reason why alert suppression is needed is to avoid creating multiple alerts for one particular event. We can suppress by individual host machines (`host.hostname`) to ensure we don't creating multiple alerts on one particular event on a specific host, but leave room to allow alerts to generate if another host machine is exhibiting unusual registry keys/changes that reference PowerShell.
 
 
-
-
 About Rule
-- Name: Suspicious PowerShell File Added to Registry
+- Name: Suspicious File Added to Registry
 
 - Description: Sysmon identifying .ps1 files added to autorun during bootup location in the Windows Registry.
 
@@ -931,11 +924,181 @@ Schedule Rule
 
 
 
+## Alert Context and Query-Based Detection #2
+
+Logs pertaining to file creations and modifications can be found within a Endpoint Event log (`endpoint.events.file`). We know that file creations or updates should have values of `creation` or `overwrite` and we are concern the file creations/updates are associated to a PowerShell process targeting the `C:\Windows\Temp\` directory. We can run the below query to hone in and build a detection on this behavior.
+
+```
+event.dataset: "endpoint.events.file" and event.action: (creation or overwrite) and process.name: "powershell.exe" and file.path: *Windows\\\\Temp\\\\*
+```
+
+Additionally, we would want to toggle fields with values that may be interesting to us and can provide the relevant context of registry edits and changes. Some questions that come to mind are:
+
+- What is the unusual file path?
+- What is the unusual file name?
+- What is the process associated with the unusual file?
+- Which host machine is affected?
+
+The fields `file.path`, `file.name`, `process.name`, and `host.hostname` can be toggled on to answer these questions and provide context.
+
+
+![alert3_elastic2](./images/alert3_elastic2.png)
+
+
+To build a query-based detection alert, navigate to Security > Rules > Detection Rules > Create new rule > Custom query and paste in the query we created above into the Custom query field. The following details and settings below can be applied to the rule.
+
+Define Rule
+
+- Custom Query: `event.dataset: "endpoint.events.file" and event.action: (creation or overwrite) and process.name: "powershell.exe" and file.path: *Windows\\\\Temp\\\\*`
+
+- Suppress alerts by: `host.hostname`
+
+- Suppress per time period: 5 Minutes
+
+>[!NOTE]  
+> The reason why alert suppression is needed is to avoid creating multiple alerts for one particular event. We can suppress by individual host machines (`host.hostname`) to ensure we don't creating multiple alerts on one particular event on a specific host, but leave room to allow alerts to generate if another host machine is exhibiting suspicious files being written to Temp involving PowerShell.
+
+
+About Rule
+- Name: Suspicious File Written to Temp Directory
+
+- Description: Endpoint identifying files being written to Windows\Temp directory involving PowerShell.
+
+- Severity: Critical
+
+- Risk Score: 100
+
+- Advanced Settings
+    - MITRE ATT&CK Threats
+        - Tactic: Collection (T1119)
+        - Technique: Data Staged (T1074)
+        - Subtechnique: Local File Copy (T1105.001)
+
+Schedule Rule
+
+- Runs every: 5 Minutes
+
+- Additional look-back time: 5 Minutes
 
 
 
 
+## Alert Context and Query-Based Detection #3
+
+Logs pertaining to file creations and modifications can be found within a Endpoint Event log (`endpoint.events.file`). We know that file creations or updates should have values of `creation` or `overwrite` and we are concern the file creations/updates are associated to a PowerShell process targeting the `C:\Windows\Temp\` directory. This is similar to our Query-Based Detection #2, however we've added on `file.name: *zip` which may be a indicator that data being prepped for exfiltration. We can run the below query to hone in and build a detection on this behavior.
+
+```
+event.dataset: "endpoint.events.file" and event.action: (creation or overwrite) and process.name: "powershell.exe" and file.path: *Windows\\\\Temp\\\\* and file.name: *zip
+```
+
+Additionally, we would want to toggle fields with values that may be interesting to us and can provide the relevant context of registry edits and changes. Some questions that come to mind are:
+
+- What is the unusual file path?
+- What is the unusual file name?
+- What is the process associated with the unusual file?
+- Which host machine is affected?
+
+The fields `file.path`, `file.name`, `process.name`, and `host.hostname` can be toggled on to answer these questions and provide context.
+
+
+![alert3_elastic3](./images/alert3_elastic3.png)
+
+
+To build a query-based detection alert, navigate to Security > Rules > Detection Rules > Create new rule > Custom query and paste in the query we created above into the Custom query field. The following details and settings below can be applied to the rule.
+
+Define Rule
+
+- Custom Query: `event.dataset: "endpoint.events.file" and event.action: (creation or overwrite) and process.name: "powershell.exe" and file.path: *Windows\\\\Temp\\\\* and file.name: *zip`
+
+- Suppress alerts by: `host.hostname`
+
+- Suppress per time period: 5 Minutes
+
+>[!NOTE]  
+> The reason why alert suppression is needed is to avoid creating multiple alerts for one particular event. We can suppress by individual host machines (`host.hostname`) to ensure we don't creating multiple alerts on one particular event on a specific host, but leave room to allow alerts to generate if another host machine is exhibiting suspicious files being written to Temp involving PowerShell.
+
+
+About Rule
+- Name: Data Archvie for Potential Exfil
+
+- Description: Endpoint identifying .zip files created by PowerShell in the Windows/Temp directory.
+
+- Severity: Critical
+
+- Risk Score: 100
+
+- Advanced Settings
+    - MITRE ATT&CK Threats
+        - Tactic: Collection (T1119)
+        - Technique: Data Staged (T1074)
+        - Subtechnique: Local File Copy (T1105.001)
+
+Schedule Rule
+
+- Runs every: 5 Minutes
+
+- Additional look-back time: 5 Minutes
 
 
 
-## Threshold-Based Detection
+
+## Alert Context and Query-Based Detection #4
+Logs pertaining to FTP traffic can be found within Zeek (`zeek.ftp`). We know that if there has been any attempts to transmit data, then the `event.action` field should have a value of `STOR`. While we could be even more specific in our query and look for .zip files, it may be too specific and overlook the possibility that non-zipped data was exfiltrated, like a regular text file. We can run the below query to hone in and build a detection on this behavior.
+
+
+```
+event.dataset: zeek.ftp and event.action: STOR
+```
+
+Additionally, we would want to toggle fields with values that may be interesting to us and can provide the relevant context of registry edits and changes. Some questions that come to mind are:
+
+- What is the source IP address?
+- What is the destination IP addresss/port?
+- What is the name associated with the FTP server?
+- What is the FTP action?
+- What is the file name/file directory the data is being exfitlrated to?
+- Are there any Zeek FTP messages?
+
+The fields `source.ip`, `destination.ip`, `destination.port`, `related.user`, `event.action`, `zeek.ftp.arg`, and `zeek.ftp.reply.msg` can be toggled on to answer these questions and provide context.
+
+
+![alert3_elastic4](./images/alert3_elastic4.png)
+
+
+To build a query-based detection alert, navigate to Security > Rules > Detection Rules > Create new rule > Custom query and paste in the query we created above into the Custom query field. The following details and settings below can be applied to the rule.
+
+Define Rule
+
+- Custom Query: `event.dataset: zeek.ftp and event.action: STOR`
+
+- Suppress alerts by: `destination.ip`
+
+- Suppress per time period: 5 Minutes
+
+>[!NOTE]  
+> The reason why alert suppression is needed is to avoid creating multiple alerts for one particular event. We can suppress by the destination IP address (`destination.ip`) to ensure we don't creating multiple alerts on one particular single large event. It could be possible that data is not exfiltrated by one large .zip, but through several multiple files. If data is exfiltrated to a different destination IP address, then another alert should trigger.
+
+
+About Rule
+- Name: Data Exfiltration over Port 21/FTP
+
+- Description: Zeek FTP identifying data exfiltration over Port 21/FTP
+
+- Severity: Critical
+
+- Risk Score: 100
+
+- Advanced Settings
+    - MITRE ATT&CK Threats
+        - Tactic: Exfiltration (TA0010)
+        - Technique: Automated Exfiltration (T1020)
+
+Schedule Rule
+
+- Runs every: 5 Minutes
+
+- Additional look-back time: 5 Minutes
+
+
+
+
