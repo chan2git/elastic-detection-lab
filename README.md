@@ -67,7 +67,7 @@ Detection Engineering can be broadly described as the art of collecting, monitor
 - Anomalies in the environment (uncommon network traffic patterns, unexpected user activity, rogue daemons/processes)
 - Identifying the existence of specific Indicators of Compromise, or IOCs (unusual IP addresses, known malicious domains, suspicious user-agent strings, hash fingerprint of harmful files, etc.).
 
-Detection Engineering is a dynamic and multi-faceted niche that draws from various security disciplines, such as Threat Intelligence, Incident Response, Malware Analysis, Network Security, and beyond. As a consantly evolving practice, Detection Engineering aims to stay ahead of known and emerging threats by ensuring robust and comprehensive log collection, leveraging the latest and most relevant threat intelligence, and safeguarding the integrity of the enterprise envionrment.
+Detection Engineering is a dynamic and multi-faceted niche that draws from various security disciplines, such as Threat Intelligence, Incident Response, Malware Analysis, Network Security, and beyond. As a constantly evolving practice, Detection Engineering aims to stay ahead of known and emerging threats by ensuring robust and comprehensive log collection, leveraging the latest and most relevant threat intelligence, and safeguarding the integrity of the enterprise envionrment.
 
 
 # Project and Repo Overview
