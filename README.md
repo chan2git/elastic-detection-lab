@@ -72,9 +72,9 @@ Detection Engineering is a dynamic and multi-faceted niche that draws from vario
 
 # Project and Repo Overview
 
-This repo is my personal recap and walkthrough of a introductory hands-on course by TCM Security on Detection Engineering. The course and project focuses on staging a local network environment consisting of three virtual machines (VM) which play the role of Attacker, Target Victim, and Zeek/Network Traffic Analyzer, and the implementation of Elastic Cloud (trial version) as the SIEM of choice, which will be utilized to create and test detection alerts for various scenarios.
+This repository is my personal recap and walkthrough of a introductory hands-on course by TCM Security on Detection  (Detection Engineering for Beginners). The course and project focuses on staging a local network environment consisting of three virtual machines (VM) which play the role of Attacker, Target Victim, and Zeek/Network Traffic Analyzer, and the implementation of Elastic Cloud (trial version) as the SIEM of choice, which will be utilized to create and test detection alerts for various scenarios.
 
-The current version of this repo highlights the local environment/VM/SIEM setup, installing agents to collect logs, and testing Elastic queries and alerts. A future pending update will cover TOML, uploading detections to Github, and programtically pushing alerts to Elastic Cloud. 
+The current version of this repository highlights the local environment/VM/SIEM setup, installing agents to collect logs, and testing Elastic queries and alerts. A future pending update will cover TOML, uploading detections to Github, and programtically pushing alerts to Elastic Cloud. 
 
 While this recap/walkthrough will briefly touch upon setting up the lab environment and settings, the primary focus is on using Elastic Cloud as a SIEM and creating detection alerts. This repo aims to showcase a hands-on demonstration of successfully completing the course while highlighting a comprehensive understanding of its contents and the essential/fundamental principles of detection engineering.
 
@@ -91,7 +91,7 @@ A SIEM will also need to be implemented which will collect logs from the Ubuntu 
 
 The Linux VM is needed to install and run Zeek, which will collect logs on HTTP/network traffic within our local environment network. While any Linux distro should work, the distro of choice for this project is Ubuntu.
 
-The Attacker VM is needed to conduct interactions with the Target Victim VM, such as port scanning, sending over malicious files, remote PowerShell script execution, and establishing a reverse remote shell connection. These activities aim to trigger and validate our alert detections. The Attacker VM of choice for this project is ParrotOS - alternatively Kali Linux can be used as the Attacker VM. More importantly, the tools needed for the Attacker VM is nmap, OWASP ZAP, Nikto, and Metasploit.
+The Attacker VM is needed to conduct interactions with the Target Victim VM, such as port scanning, sending over malicious files, remote PowerShell script execution, and establishing a reverse remote shell connection. These activities aim to trigger and validate our alert detections. The Attacker VM of choice for this project is ParrotOS - alternatively Kali Linux can be used as the Attacker VM. More importantly, the tools needed for the Attacker VM is Nmap, OWASP ZAP, Nikto, and Metasploit.
 
 The Target Victim VM is needed to be on the receiving end of the Attacker VM's activities. The Target Victim VM will have Elastic agents installed which will help to forward logs to our instance of Elastic Cloud. The choice of the Target Victim VM will be Windows 11. Additional requirements will include the installation of Windows Sysmon as an additional log source and configurations to improve PowerShell script execution visability.
 
@@ -107,6 +107,11 @@ Please see the respective host setup under Lab Setup for additional clarity and 
 
 ## Local Environment Network Schema
 
+The Host OS (Windows) will run VirtualBox as the hypervisor of choice. Each VM will have a second adapter enabled to host-only adapter, which will form an internal local network (192.168.56.0/24). Notably, Ubuntu VM's network interface mode will be set to promiscuous mode, which will allow Zeek to pick up on it's network traffic.
+
+Ubuntu and Windows 11 VMs will have Elastic agents installed to collect and forward Zeek HTTP and Endpoint/Sysmon logs respectively to Elastic. ParrotOS will be the VM conducting the attacks.
+
+![schema](./images/schema.png)
 
 
 # Virtual Machine Setup
@@ -191,7 +196,7 @@ While the Elastic and Zeek agents will cover a lot of the log data generated fro
 
 You can download Sysmon from https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon.
 
-Additionally, Sysmon will require a configuration file to work. A premade configuration file can be downloaded from https://github.com/SwiftOnSecurity/sysmon-config. Please refer to this repo for additional details and guidance on setting up and configuring Sysmon on the Windows 11 VM.
+Additionally, Sysmon will require a configuration file to work. A premade configuration file can be downloaded from https://github.com/SwiftOnSecurity/sysmon-config. Please refer to this repository for additional details and guidance on setting up and configuring Sysmon on the Windows 11 VM.
 
 
 
@@ -247,7 +252,7 @@ Documentation for installing and configuring Zeek can be found at https://docs.z
 
 Ensure that you install `curl` on your Ubuntu VM by running the command `sudo apt-install curl` before running any install commands from the Zeek documentation or you may encounter an install error.
 
-While Zeek is a critical component of the overall project, the specific details on configuration is outside the scope of this repo which is to highlight the general setup of the local network environment and lab, while primarily focusing more on Elastic Cloud and detection engineering. 
+While Zeek is a critical component of the overall project, the specific details on configuration is outside the scope of this repository which is to highlight the general setup of the local network environment and lab, while primarily focusing more on Elastic Cloud and detection engineering. 
 
 Once Zeek has been fully setup and configured, it will need to be deployed in order to actively listen and collect traffic data.
 
