@@ -107,7 +107,7 @@ Please see the respective host setup under Lab Setup for additional clarity and 
 
 ## Local Environment Network Schema
 
-The Host OS (Windows) will run VirtualBox as the hypervisor of choice. Each VM will have a second adapter enabled to host-only adapter, which will form an internal local network (192.168.56.0/24). Notably, Ubuntu VM's network interface mode will be set to promiscuous mode, which will allow Zeek to pick up on it's network traffic.
+The Host OS (Windows) will run VirtualBox as the hypervisor of choice. Each VM will have a second adapter enabled to host-only adapter, which will form an internal local network (192.168.56.0/24). Notably, Ubuntu VM's network interface mode will be set to promiscuous mode, which will allow Zeek to pick up on the local network traffic.
 
 Ubuntu and Windows 11 VMs will have Elastic agents installed to collect and forward Zeek HTTP and Endpoint/Sysmon logs respectively to Elastic. ParrotOS will be the VM conducting the attacks.
 
